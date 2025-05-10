@@ -1,0 +1,10 @@
+.movie-li {
+	list-style-type: none;
+	margin: 20px;
+}
+
+.movie-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-evenly;
+}

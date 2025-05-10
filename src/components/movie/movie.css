@@ -1,0 +1,17 @@
+.movie {
+	display: flex;
+	width: 451px;
+	height: 279px;
+	box-shadow: 0px 4px 12px 0px #00000026;
+	overflow: hidden;
+}
+
+.img {
+	width: 183px;
+	height: 280px;
+}
+
+.movie-info {
+	width: 250px;
+	transform: translate(10px, -20px);
+}
