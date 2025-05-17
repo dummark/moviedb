@@ -1,4 +1,5 @@
 export default class MovieapiService {
+	url = 'https://api.themoviedb.org/3';
 	options = {
 		method: 'GET',
 		headers: {
@@ -8,10 +9,11 @@ export default class MovieapiService {
 		},
 	};
 
+	_apiKey = '66386b9af03de3717d1b50c8180d8120';
+
 	async getMovieList(name, options = this.options) {
 		const res = await fetch(
-			`https://api.themoviedb.org/3/search/movie?query=${name}`,
-			options
+			`${this.url}/search/movie?query=${name}&api_key=${this._apiKey}`
 		);
 		if (!res.ok) {
 			throw new Error(`Фильмов с названием ${name} не существует`);
@@ -22,10 +24,12 @@ export default class MovieapiService {
 
 	async getGenres() {
 		const res = await fetch(
-			'https://api.themoviedb.org/3/genre/movie/list?language=en',
-			this.options
-		).then(res => res.json);
-		const genres = await res.json();
-		return genres;
+			`${this.url}/genre/movie/list?language=en&api_key=${this._apiKey}`
+		);
+		if (!res.ok) {
+			throw new Error('Не удалось получить список жанров');
+		}
+		const data = await res.json();
+		return data;
 	}
 }

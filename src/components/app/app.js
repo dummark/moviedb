@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import MovieList from '../movie-list';
-import { Typography } from 'antd';
 import MovieapiService from '../../services/movieapi-service';
+import Spinner from '../spinner';
+import ErrorIndicator from '../error-indicator';
+import { Offline, Online } from 'react-detect-offline';
 import { format } from 'date-fns';
 import './app.css';
-
-const { Text } = Typography;
+import { Alert } from 'antd';
 
 const App = () => {
 	const movieapi = new MovieapiService();
 
 	const [movies, setMovies] = useState([]);
+	const [error, setError] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	const textReduction = (text, symbols) => {
 		if (text.length <= symbols) {
@@ -21,18 +24,15 @@ const App = () => {
 		}
 	};
 
-	useEffect(() => {
-		const genresNames = async ([...id]) => {
-			const res = await movieapi.getGenres();
-			const genreNames = res.results.map(el => {
-				if (el.id === id) {
-					return el.name;
-				}
+	const getMovieInfo = async name => {
+		setLoading(false);
+		try {
+			const genreRes = await movieapi.getGenres();
+			const genreMap = {};
+			genreRes.genres.forEach(genre => {
+				genreMap[genre.id] = genre.name;
 			});
-			return genreNames;
-		};
 
-		const getMovieInfo = async name => {
 			const res = await movieapi.getMovieList(name);
 			const movieInfo = res.results.map(movie => ({
 				id: movie.id,
@@ -40,19 +40,45 @@ const App = () => {
 				date: movie.release_date
 					? format(new Date(movie.release_date), 'MMMM d, yyyy')
 					: 'Дата неизвестна',
-				genres: <Text keyboard>{genresNames(movie.genre_ids).join(`, `)}</Text>,
+				genres: movie.genre_ids.map(id => genreMap[id]),
 				overview: textReduction(movie.overview, 200),
 				img: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
 			}));
-			setMovies(movieInfo);
-		};
 
-		getMovieInfo('new');
-	}, []);
+			setMovies(movieInfo);
+			setError(false);
+		} catch (e) {
+			setError(true);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		getMovieInfo('cuckold');
+	});
+
+	const hasData = !(loading || error);
+
+	const errorMessage = error ? <ErrorIndicator /> : null;
+	const spinner = loading ? <Spinner /> : null;
+	const content = hasData ? <MovieList movies={movies} /> : null;
 
 	return (
 		<div>
-			<MovieList movies={movies} />
+			<Online>
+				{errorMessage}
+				{spinner}
+				{content}
+			</Online>
+			<Offline>
+				<Alert
+					className='error-indicator'
+					message='Отсутствует подключение к интернету'
+					description='Проверьте подключение'
+					type='info'
+				/>
+			</Offline>
 		</div>
 	);
 };
